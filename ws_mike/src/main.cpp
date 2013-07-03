@@ -2,7 +2,7 @@
 #include "std_msgs/String.h"
 #include <sstream>
 
-//Global variable
+//Global variable dsfsdf
 std::string _name="mike";
 ros::Publisher chatter_pub;
 
