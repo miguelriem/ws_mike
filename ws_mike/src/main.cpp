@@ -19,15 +19,32 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 	ROS_INFO("%s: Received msg with dist=%f",_name.c_str(), msg_in->dist);
 	_pos_x += msg_in->dist;
 
-	//check if you won
-	
+	bool should_quit=false;
 	//Publish new msg
 	ws_referee::custom msg_out;
-
-
-	msg_out.dist = get_random_num(0, 0.1);
 	msg_out.sender = _name;
-	msg_out.winner = "";
+
+	//Check race status
+	if (msg_in->winner!="")//if someone else won (crap)
+	{
+		ROS_INFO("%s: Damn, %s has won the race. It was just luck",_name.c_str(), msg_in->winner.c_str());
+		msg_out.winner = msg_in->winner;
+		msg_out.dist = 0;
+		should_quit=true;
+	}
+	else if (_pos_x > 5) //if I won
+	{
+		ROS_WARN("\n\n%s: I WON IUPIIII\n\n ",_name.c_str());
+		msg_out.winner = "mike";
+		msg_out.dist = 0;
+		should_quit=true;
+	}
+	else //if nobody won
+	{
+		msg_out.winner = "";
+		msg_out.dist = get_random_num(0, 0.1);
+	}
+
 	chatter_pub.publish(msg_out);
 	ROS_INFO("%s: I am at %f.  will publish a message",_name.c_str(), _pos_x);
 
@@ -52,6 +69,12 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 	marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
 	marker.text = "mike";
 	marker_pub.publish( marker );
+
+	if (should_quit==true)
+	{
+		ROS_INFO("%s: I will shutdown",_name.c_str());
+		ros::shutdown();
+	}
 }
 
 int main(int argc, char **argv)
