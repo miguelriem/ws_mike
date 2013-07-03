@@ -15,7 +15,7 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 {
 	//ROS_INFO("%s: heard: [%s]", _name.c_str(), msg_in->data.c_str());
 	ROS_INFO("%s: Received msg with dist=%f",_name.c_str(), msg_in->dist);
-	_pos_x += _pos_x;
+	_pos_x += msg_in->dist;
 
 	//Publish new msg
 	//std_msgs::String msg_out;
