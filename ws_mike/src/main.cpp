@@ -42,7 +42,7 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 	else //if nobody won
 	{
 		msg_out.winner = "";
-		msg_out.dist = get_random_num(0, 0.1);
+		msg_out.dist = get_random_num();
 	}
 
 	chatter_pub.publish(msg_out);
