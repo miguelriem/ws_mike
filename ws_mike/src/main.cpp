@@ -11,6 +11,7 @@
 
 //Global variable 
 std::string _name="mike";
+std::string _policed_player="hamid";
 ros::Publisher chatter_pub;
 ros::Publisher marker_pub;
 
@@ -25,6 +26,29 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 {
 
 	ROS_INFO("%s: Received msg with dist=%f",_name.c_str(), msg_in->dist);
+
+	//Check for the policed player
+
+	bool be_a_police = true;
+	//query transform world to the policed player
+	tf::StampedTransform tf_2;
+	try{
+		listener->lookupTransform("world", "tf_" + _policed_player, ros::Time(0), tf_2);
+	}
+	catch (tf::TransformException ex){
+		ROS_ERROR("%s",ex.what());
+		be_a_police = false;
+	}
+
+	if (be_a_police)	
+	{
+		if (!is_in_field(tf_2.getOrigin().x(), tf_2.getOrigin().y()))
+		{
+			//send player to new_pos_x = -5 and new_pos_y=0
+			ROS_INFO("%s: Policing ... I found that %s if out of the arena. Will send him to -5,0", _name.c_str(), _policed_player.c_str());
+		}
+	}
+
 
 	//Position update
 	//Send transform from tf_mike to tf_tmp_mike
@@ -113,7 +137,7 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 }
 
 bool serviceCallback(ws_referee::MovePlayerTo::Request  &req,
-		         	 ws_referee::MovePlayerTo::Response &res)
+		ws_referee::MovePlayerTo::Response &res)
 {
 	ROS_INFO("%s: Damn %s sent me to x=%f, y=%f", _name.c_str(), req.player_that_requested.c_str(), req.new_pos_x, req.new_pos_y);
 
@@ -176,7 +200,7 @@ int main(int argc, char **argv)
 
 
 
-	ros::ServiceServer service = n.advertiseService("MoveMikeTo", serviceCallback);
+	ros::ServiceServer service = n.advertiseService("move_player_" + _policed_player, serviceCallback);
 	ros::Subscriber sub = n.subscribe("player_in", 1, chatterCallback);
 	ros::Rate loop_rate(2);
 
