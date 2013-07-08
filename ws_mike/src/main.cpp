@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include <ws_referee/custom.h>
+#include <ws_referee/MovePlayerTo.h>
 #include <ws_referee/randomize.h>
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_broadcaster.h>
@@ -111,6 +112,22 @@ void chatterCallback(const ws_referee::custom::ConstPtr& msg_in)
 	}
 }
 
+bool serviceCallback(ws_referee::MovePlayerTo::Request  &req,
+		         	 ws_referee::MovePlayerTo::Response &res)
+{
+	ROS_INFO("%s: Damn %s sent me to x=%f, y=%f", _name.c_str(), req.player_that_requested.c_str(), req.new_pos_x, req.new_pos_y);
+
+	//Send the transformation
+	transform.setOrigin( tf::Vector3(req.new_pos_x, req.new_pos_y, 0.0) );
+	transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+	br->sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "tf_" + _name));
+
+	//Add the code for moving our position to the requested new_pos
+	res.reply = "I will have my revenge!";
+
+	return true;
+}
+
 int main(int argc, char **argv)
 {
 
@@ -159,7 +176,7 @@ int main(int argc, char **argv)
 
 
 
-
+	ros::ServiceServer service = n.advertiseService("MoveMikeTo", serviceCallback);
 	ros::Subscriber sub = n.subscribe("player_in", 1, chatterCallback);
 	ros::Rate loop_rate(2);
 
